@@ -12,13 +12,13 @@
       "src": "https://via.placeholder.com/192x192/0D9E7E/ffffff?text=TH",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "https://via.placeholder.com/512x512/0D9E7E/ffffff?text=TH",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
