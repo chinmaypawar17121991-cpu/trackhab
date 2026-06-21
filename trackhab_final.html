@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrackHab — Build Daily Habits</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  /* ── Light Theme (default) ── */
+  :root {
+    --bg: #F5F7FA;
+    --bg2: #FFFFFF;
+    --bg3: #EEF1F8;
+    --mint: #0D9E7E;
+    --mint-dim: rgba(13,158,126,0.11);
+    --mint-dim2: rgba(13,158,126,0.06);
+    --amber: #D4820A;
+    --amber-dim: rgba(212,130,10,0.11);
+    --lavender: #6B4FBB;
+    --lavender-dim: rgba(107,79,187,0.11);
+    --coral: #D63B75;
+    --coral-dim: rgba(214,59,117,0.11);
+    --sky: #1F6FBF;
+    --text: #111827;
+    --text-muted: #6B7A99;
+    --border: rgba(0,0,0,0.08);
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 4px 24px rgba(0,0,0,0.10);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --quote-bg: linear-gradient(135deg, #e6f4f0 0%, #eef0fb 100%);
+    --done-bg: linear-gradient(135deg, #ffffff, #e6f5f1);
+    --heat-0: #E2E8F4;
+    --sidebar-shadow: 2px 0 16px rgba(0,0,0,0.07);
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-display: 'DM Serif Display', serif;
+  }
+
+  /* ── Dark Theme ── */
+  [data-theme="dark"] {
+    --bg: #0F1724;
+    --bg2: #172032;
+    --bg3: #1E2D45;
+    --mint: #00C49A;
+    --mint-dim: rgba(0,196,154,0.13);
+    --mint-dim2: rgba(0,196,154,0.07);
+    --amber: #F0A030;
+    --amber-dim: rgba(240,160,48,0.13);
+    --lavender: #A78BFA;
+    --lavender-dim: rgba(167,139,250,0.13);
+    --coral: #F06090;
+    --coral-dim: rgba(240,96,144,0.13);
+    --sky: #60B4F0;
+    --text: #EDF0F7;
+    --text-muted: #7A8FAF;
+    --border: rgba(255,255,255,0.08);
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --shadow-lg: 0 4px 24px rgba(0,0,0,0.4);
+    --quote-bg: linear-gradient(135deg, #172e28 0%, #1a2040 100%);
+    --done-bg: linear-gradient(135deg, #172032, #0f2a22);
+    --heat-0: #1E2D45;
+    --sidebar-shadow: 2px 0 16px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+  /* ── Layout ── */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px; min-height: 100vh; background: var(--bg2);
+    border-right: 1px solid var(--border); padding: 28px 20px;
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100;
+    box-shadow: var(--sidebar-shadow); transition: background 0.3s, border-color 0.3s;
+  }
+  .main { margin-left: 240px; flex: 1; padding: 36px 40px; min-height: 100vh; }
+
+  /* ── Brand ── */
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
+  .brand-icon { width: 36px; height: 36px; background: var(--mint); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .brand-name { font-family: var(--font-display); font-size: 1.35rem; letter-spacing: -0.01em; color: var(--text); }
+  .brand-name span { color: var(--mint); }
+
+  /* ── Nav ── */
+  .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+    border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+    color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
+    border: none; background: none; text-align: left; width: 100%; font-family: var(--font-body);
+  }
+  .nav-item:hover { background: var(--mint-dim2); color: var(--text); }
+  .nav-item.active { background: var(--mint-dim); color: var(--mint); }
+  .nav-item .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+
+  .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
+  .date-pill { background: var(--bg3); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: var(--text-muted); }
+  .date-pill strong { display: block; font-family: var(--font-body); font-weight: 700; color: var(--text); font-size: 0.95rem; margin-top: 2px; }
+
+  /* ── Theme Toggle ── */
+  .theme-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg3); border-radius: 8px; padding: 9px 13px;
+    margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--mint); }
+  .theme-toggle-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+  .theme-toggle-pill {
+    width: 36px; height: 20px; background: var(--bg2); border-radius: 10px;
+    border: 1.5px solid var(--border); position: relative; transition: background 0.3s;
+  }
+  [data-theme="dark"] .theme-toggle-pill { background: var(--mint); border-color: var(--mint); }
+  .theme-toggle-knob {
+    width: 14px; height: 14px; background: var(--text-muted); border-radius: 50%;
+    position: absolute; top: 2px; left: 2px; transition: transform 0.3s, background 0.3s;
+  }
+  [data-theme="dark"] .theme-toggle-knob { transform: translateX(16px); background: #fff; }
+
+  /* ── Pages ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Page Header ── */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; }
+  .page-title { font-family: var(--font-display); font-size: 2.1rem; letter-spacing: -0.01em; line-height: 1.15; color: var(--text); }
+  .page-sub { color: var(--text-muted); font-size: 0.9rem; margin-top: 6px; font-weight: 500; }
+
+  /* ── Buttons ── */
+  .btn { padding: 10px 20px; border-radius: var(--radius-sm); font-family: var(--font-body); font-weight: 700; font-size: 0.88rem; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-mint { background: var(--mint); color: #fff; }
+  .btn-mint:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg2); }
+  .btn-sm { padding: 7px 14px; font-size: 0.82rem; }
+
+  /* ── Quote Banner ── */
+  .quote-banner {
+    background: var(--quote-bg);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 28px 32px; margin-bottom: 32px; position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 24px; box-shadow: var(--shadow);
+  }
+  .quote-img {
+    width: 90px; height: 90px; border-radius: 12px; object-fit: cover;
+    flex-shrink: 0; border: 2px solid var(--mint-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.8rem; background: var(--bg2);
+  }
+  .quote-text { font-family: var(--font-display); font-style: italic; font-size: 1.12rem; line-height: 1.5; color: var(--text); }
+  .quote-author { font-size: 0.82rem; color: var(--mint); margin-top: 8px; font-weight: 500; }
+  .quote-accent { position: absolute; right: -20px; top: -20px; width: 120px; height: 120px; background: var(--mint-dim2); border-radius: 50%; }
+  .quote-accent2 { position: absolute; right: 40px; bottom: -30px; width: 80px; height: 80px; background: var(--lavender-dim); border-radius: 50%; }
+
+  /* ── Progress Row ── */
+  .progress-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 8px; font-weight: 700; }
+  .stat-value { font-family: var(--font-display); font-size: 2.1rem; }
+  .stat-value.mint { color: var(--mint); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.lavender { color: var(--lavender); }
+  .stat-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── Today's Habits ── */
+  .section-title { font-family: var(--font-body); font-weight: 700; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+  .habits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .habit-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .habit-card:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-1px); }
+  .habit-card.done { border-color: rgba(13,158,126,0.35); background: var(--done-bg); }
+  .habit-card.done::after { content: ''; position: absolute; inset: 0; background: var(--mint-dim2); pointer-events: none; }
+  .habit-emoji { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; background: var(--bg3); transition: transform 0.2s; }
+  .habit-card:hover .habit-emoji { transform: scale(1.1); }
+  .habit-info { flex: 1; min-width: 0; }
+  .habit-name { font-weight: 700; font-size: 0.93rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .habit-streak { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+  .habit-streak .fire { color: var(--amber); }
+  .habit-check {
+    width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: all 0.2s; font-size: 0.9rem; color: transparent;
+  }
+  .habit-card.done .habit-check { background: var(--mint); border-color: var(--mint); color: var(--bg); }
+
+  .habits-empty {
+    grid-column: 1/-1; text-align: center; padding: 48px 24px;
+    color: var(--text-muted); background: var(--bg2); border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+  .habits-empty .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .habits-empty p { font-size: 0.9rem; }
+
+  /* ── Add Habit Page ── */
+  .add-habit-form { max-width: 560px; }
+  .form-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px; }
+  .form-section-title { font-family: var(--font-display); font-size: 1.05rem; margin-bottom: 20px; color: var(--lavender); }
+  .form-group { margin-bottom: 20px; }
+  .form-group:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+  input[type="text"] {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text);
+    font-family: var(--font-body); font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--mint); }
+  input[type="text"]::placeholder { color: var(--text-muted); }
+
+  .emoji-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+  .emoji-option {
+    width: 40px; height: 40px; background: var(--bg3); border: 2px solid transparent;
+    border-radius: 10px; font-size: 1.3rem; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .emoji-option:hover { background: var(--bg); transform: scale(1.1); }
+  .emoji-option.selected { border-color: var(--mint); background: var(--mint-dim); }
+
+  .habit-limit-notice { background: var(--amber-dim); border: 1px solid rgba(255,179,71,0.2); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 0.85rem; color: var(--amber); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+  /* ── Manage Page ── */
+  .manage-list { display: flex; flex-direction: column; gap: 10px; max-width: 600px; }
+  .manage-item {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+  }
+  .manage-item .habit-emoji { width: 40px; height: 40px; font-size: 1.3rem; }
+  .manage-item .habit-name { flex: 1; font-weight: 600; font-size: 0.95rem; }
+  .manage-item .habit-streak { font-size: 0.8rem; color: var(--amber); }
+  .btn-danger { background: var(--coral-dim); color: var(--coral); border: 1px solid rgba(255,107,138,0.2); }
+  .btn-danger:hover { background: rgba(255,107,138,0.25); }
+  .btn-edit { background: var(--mint-dim); color: var(--mint); border: 1px solid rgba(0,184,148,0.2); }
+  .btn-edit:hover { background: rgba(0,184,148,0.22); }
+
+  /* ── Stats Page ── */
+  .stats-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .stats-full { grid-column: 1/-1; }
+
+  .chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+  .chart-title { font-family: var(--font-body); font-weight: 700; font-size: 0.95rem; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .chart-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Habit Wheel */
+  #habitWheel { display: block; margin: 0 auto; }
+
+  /* Bar chart */
+  .bar-chart { display: flex; flex-direction: column; gap: 14px; }
+  .bar-row { display: flex; align-items: center; gap: 12px; }
+  .bar-label { width: 120px; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .bar-track { flex: 1; height: 10px; background: var(--bg3); border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease; }
+  .bar-pct { width: 38px; text-align: right; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+
+  /* Heatmap */
+  .heatmap { display: flex; gap: 4px; flex-wrap: wrap; }
+  .heatmap-cell { width: 14px; height: 14px; border-radius: 3px; }
+  .heat-0 { background: var(--heat-0); }
+  .heat-1 { background: #005a46; }
+  .heat-2 { background: #00a07b; }
+  .heat-3 { background: #00d4a0; }
+  .heat-4 { background: var(--mint); }
+
+  /* Streak cards */
+  .streak-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .streak-card { background: var(--bg3); border-radius: var(--radius-sm); padding: 16px; }
+  .streak-card .emoji { font-size: 1.4rem; margin-bottom: 8px; }
+  .streak-card .name { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .streak-card .streak-num { font-family: var(--font-display); font-size: 1.7rem; color: var(--amber); }
+  .streak-card .streak-unit { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* ── Modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; width: 480px; max-width: 95vw; box-shadow: var(--shadow-lg); }
+  .modal-title { font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 4px; }
+  .modal-sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px; background: var(--bg2);
+    border: 1px solid var(--mint); border-radius: var(--radius-sm);
+    padding: 14px 20px; font-size: 0.88rem; font-weight: 600;
+    z-index: 300; opacity: 0; transform: translateY(10px);
+    transition: all 0.3s; pointer-events: none; color: var(--mint);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Confetti ── */
+  .confetti-piece { position: fixed; width: 8px; height: 8px; border-radius: 2px; pointer-events: none; z-index: 400; animation: confettiFall 1.4s ease-in forwards; }
+  @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .sidebar { width: 200px; }
+    .main { margin-left: 200px; padding: 24px 20px; }
+    .stats-layout { grid-template-columns: 1fr; }
+    .progress-row { grid-template-columns: repeat(2, 1fr); }
+    .habits-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Podcasts ── */
+  .podcasts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 22px; }
+  .podcast-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .podcast-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .podcast-thumb {
+    width: 100%; aspect-ratio: 16/9; background: var(--bg3);
+    position: relative; cursor: pointer; overflow: hidden;
+  }
+  .podcast-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .podcast-thumb .play-btn {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s;
+  }
+  .podcast-card:hover .play-btn { opacity: 1; }
+  .play-btn-circle {
+    width: 54px; height: 54px; background: rgba(255,255,255,0.92); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .podcast-meta { padding: 16px 18px 18px; }
+  .podcast-speaker { font-size: 0.72rem; font-weight: 700; color: var(--mint); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 5px; }
+  .podcast-title { font-family: var(--font-display); font-size: 1rem; line-height: 1.35; color: var(--text); margin-bottom: 8px; }
+  .podcast-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+  .podcast-watch-btn {
+    display: inline-flex; align-items: center; gap: 7px; background: #FF0000;
+    color: #fff; border: none; border-radius: 8px; padding: 8px 16px;
+    font-family: var(--font-body); font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; text-decoration: none; transition: filter 0.2s;
+  }
+  .podcast-watch-btn:hover { filter: brightness(1.12); }
+
+  /* YouTube embed overlay */
+  .yt-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 500;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .yt-overlay-inner { position: relative; width: min(860px, 96vw); }
+  .yt-iframe { width: 100%; aspect-ratio: 16/9; border-radius: var(--radius); border: none; }
+  .yt-close {
+    position: absolute; top: -44px; right: 0; background: rgba(255,255,255,0.12);
+    border: none; color: #fff; font-size: 1.6rem; width: 36px; height: 36px;
+    border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s; line-height: 1;
+  }
+  .yt-close:hover { background: rgba(255,255,255,0.25); }
+  .yt-title { color: rgba(255,255,255,0.8); font-size: 0.88rem; margin-top: 12px; text-align: center; font-family: var(--font-body); }
+
+  /* ── End Streak Modal ── */
+  .end-streak-modal { text-align: center; max-width: 500px; }
+  .end-streak-icon { font-size: 3rem; margin-bottom: 12px; }
+  .end-streak-quote {
+    font-family: var(--font-display); font-style: italic; font-size: 1.05rem; line-height: 1.55;
+    color: var(--text-muted); padding: 16px 20px; background: var(--bg3);
+    border-radius: var(--radius-sm); margin: 12px 0 16px; border-left: 3px solid var(--mint);
+  }
+  .end-streak-warning { font-size: 0.85rem; color: var(--coral); font-weight: 600; margin-bottom: 12px; }
+  .end-streak-summary {
+    background: var(--bg3); border-radius: var(--radius-sm); padding: 14px 18px;
+    font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; text-align: left;
+  }
+  .btn-end-streak { background: var(--coral); color: #fff; font-weight: 700; }
+  .btn-end-streak:hover { filter: brightness(1.08); }
+
+  /* ── Archive (Past Streaks) ── */
+  .archive-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  .archive-empty .empty-icon { font-size: 3.5rem; margin-bottom: 16px; }
+  .archive-empty p { font-size: 0.95rem; }
+  .archive-streak-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 24px 28px; margin-bottom: 20px; box-shadow: var(--shadow);
+  }
+  .archive-streak-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .archive-streak-title { font-family: var(--font-display); font-size: 1.3rem; color: var(--text); }
+  .archive-streak-dates { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; background: var(--bg3); padding: 5px 12px; border-radius: 20px; }
+  .archive-habit-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg3); border-radius: var(--radius-sm); margin-bottom: 8px; }
+  .archive-habit-row:last-child { margin-bottom: 0; }
+  .archive-habit-emoji { font-size: 1.3rem; width: 36px; text-align: center; }
+  .archive-habit-name { flex: 1; font-weight: 600; font-size: 0.9rem; }
+  .archive-habit-stats { display: flex; gap: 16px; }
+  .archive-stat-chip { font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .chip-streak { background: var(--amber-dim); color: var(--amber); }
+  .chip-rate { background: var(--mint-dim); color: var(--mint); }
+  .archive-overall { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; gap: 24px; }
+  .archive-overall-item { font-size: 0.82rem; color: var(--text-muted); }
+  .archive-overall-item strong { display: block; font-family: var(--font-display); font-size: 1.4rem; color: var(--text); }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <div class="brand-name">Track<span>Hab</span></div>
+    </div>
+    <div class="nav">
+      <button class="nav-item active" onclick="showPage('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('add')">
+        <span class="nav-icon">＋</span> Add Habit
+      </button>
+      <button class="nav-item" onclick="showPage('manage')">
+        <span class="nav-icon">⚙</span> Manage
+      </button>
+      <button class="nav-item" onclick="showPage('stats')">
+        <span class="nav-icon">📊</span> Statistics
+      </button>
+      <button class="nav-item" onclick="showPage('podcasts')">
+        <span class="nav-icon">🎙</span> Podcasts
+      </button>
+      <button class="nav-item" onclick="showPage('archive')">
+        <span class="nav-icon">🏆</span> Past Streaks
+      </button>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="nav-item" style="color:var(--coral)" onclick="openEndStreakModal()">
+          <span class="nav-icon">🔚</span> End Streak
+        </button>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <span class="theme-toggle-label" id="themeLabel">☀ Light</span>
+        <div class="theme-toggle-pill"><div class="theme-toggle-knob"></div></div>
+      </div>
+      <div class="date-pill">Today<strong id="sidebarDate">—</strong></div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ── Dashboard ── -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good <span id="greeting-time">morning</span> ✦</div>
+          <div class="page-sub">Track your habits. Build your future.</div>
+        </div>
+      </div>
+
+      <!-- Quote -->
+      <div class="quote-banner" id="quoteBanner">
+        <div class="quote-accent"></div>
+        <div class="quote-accent2"></div>
+        <div class="quote-img" id="quoteEmoji">🌅</div>
+        <div>
+          <div class="quote-text" id="quoteText">Loading inspiration…</div>
+          <div class="quote-author" id="quoteAuthor">—</div>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="progress-row">
+        <div class="stat-card">
+          <div class="stat-label">Today's Progress</div>
+          <div class="stat-value mint" id="statToday">0/0</div>
+          <div class="stat-sub">habits completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Best Streak</div>
+          <div class="stat-value amber" id="statStreak">0 🔥</div>
+          <div class="stat-sub" id="statStreakName">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Overall Rate</div>
+          <div class="stat-value lavender" id="statRate">0%</div>
+          <div class="stat-sub">last 7 days</div>
+        </div>
+      </div>
+
+      <div class="section-title">Today's Habits</div>
+      <div class="habits-grid" id="habitsGrid"></div>
+    </div>
+
+    <!-- ── Add Habit ── -->
+    <div id="page-add" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Add Habit</div>
+          <div class="page-sub">You can create up to 10 habits.</div>
+        </div>
+      </div>
+      <div class="add-habit-form">
+        <div id="limitNotice" class="habit-limit-notice" style="display:none">
+          ⚠ You've reached the 10-habit limit. Delete a habit to add a new one.
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Habit Details</div>
+          <div class="form-group">
+            <label for="habitName">Habit Name</label>
+            <input type="text" id="habitName" placeholder="e.g. Morning Run" maxlength="32">
+          </div>
+          <div class="form-group">
+            <label>Choose an Emoji Logo</label>
+            <div class="emoji-grid" id="emojiGrid"></div>
+          </div>
+        </div>
+        <button class="btn btn-mint" id="addHabitBtn" onclick="addHabit()">Create Habit</button>
+      </div>
+    </div>
+
+    <!-- ── Manage ── -->
+    <div id="page-manage" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Manage Habits</div>
+          <div class="page-sub">Reorder or delete your habits.</div>
+        </div>
+      </div>
+      <div class="manage-list" id="manageList"></div>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div id="page-stats" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Statistics</div>
+          <div class="page-sub">Your habit performance at a glance.</div>
+        </div>
+      </div>
+      <div class="stats-layout">
+        <!-- Wheel -->
+        <div class="chart-card stats-full">
+          <div class="chart-title"><span class="dot" style="background:var(--mint)"></span>Habit Completion Wheel</div>
+          <svg id="habitWheel" width="480" height="260" viewBox="0 0 480 260"></svg>
+        </div>
+        <!-- Completion Rate Bars -->
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--lavender)"></span>7-Day Completion Rate</div>
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+        <!-- Streaks -->
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--amber)"></span>Current Streaks 🔥</div>
+          <div class="streak-grid" id="streakGrid"></div>
+        </div>
+        <!-- Heatmap -->
+        <div class="chart-card stats-full">
+          <div class="chart-title"><span class="dot" style="background:var(--coral)"></span>Activity Heatmap — Last 12 Weeks</div>
+          <div class="heatmap" id="heatmap"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:0.75rem;color:var(--text-muted)">
+            Less <div class="heatmap-cell heat-0" style="width:12px;height:12px"></div><div class="heatmap-cell heat-1" style="width:12px;height:12px"></div><div class="heatmap-cell heat-2" style="width:12px;height:12px"></div><div class="heatmap-cell heat-3" style="width:12px;height:12px"></div><div class="heatmap-cell heat-4" style="width:12px;height:12px"></div> More
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Podcasts ── -->
+    <div id="page-podcasts" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Habit Podcasts 🎙</div>
+          <div class="page-sub">Watch inspiring talks on habit building from world-class performers.</div>
+        </div>
+      </div>
+      <div id="podcastsGrid" class="podcasts-grid"></div>
+    </div>
+
+    <!-- ── Past Streaks (Archive) ── -->
+    <div id="page-archive" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Past Streaks 🏆</div>
+          <div class="page-sub">Every journey you've completed, preserved forever.</div>
+        </div>
+      </div>
+      <div id="archiveList"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Confirm Delete</div>
+    <div class="modal-sub" id="modalSub">This will remove the habit and all its data.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="modalConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModalOverlay" style="display:none" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal" style="width:520px">
+    <div class="modal-title">Edit Habit</div>
+    <div class="modal-sub">Update the name or logo for this habit.</div>
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:0.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Habit Name</label>
+      <input type="text" id="editHabitName" placeholder="Habit name" maxlength="32" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--mint)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+    <div>
+      <label style="display:block;font-size:0.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Choose Logo</label>
+      <div class="emoji-grid" id="editEmojiGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-mint" onclick="saveEditHabit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- End Streak Modal -->
+<div class="modal-overlay" id="endStreakOverlay" style="display:none" onclick="if(event.target===this)closeEndStreakModal()">
+  <div class="modal end-streak-modal">
+    <div class="end-streak-icon">🔚</div>
+    <div class="modal-title" style="text-align:center;margin-bottom:8px">End Your Streak?</div>
+    <div class="end-streak-quote" id="endStreakQuote"></div>
+    <div class="end-streak-warning">This will archive your current habits and stats, then reset so you can begin a fresh streak.</div>
+    <div class="end-streak-summary" id="endStreakSummary"></div>
+    <div class="modal-actions" style="justify-content:center;gap:14px;margin-top:24px">
+      <button class="btn btn-ghost" style="min-width:120px" onclick="closeEndStreakModal()">Keep Going 💪</button>
+      <button class="btn btn-end-streak" style="min-width:120px" onclick="confirmEndStreak()">End Streak</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Data ───────────────────────────────────────────────────────────────
+const EMOJIS = ['🏃','💪','📚','🧘','💧','🥗','✍️','🎸','🎨','🛌','☀️','🦷','🧹','🧠','💊','📝','🚴','🏊','🧗','🎯','🌿','☕','🍎','🎵','🏋️','🦶','🐕','🌙','⏰','🛁'];
+
+const QUOTES = [
+  { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "— Aristotle", emoji: "🌟" },
+  { text: "Success is the sum of small efforts repeated day in and day out.", author: "— Robert Collier", emoji: "🌅" },
+  { text: "Motivation gets you started. Habit keeps you going.", author: "— Jim Ryun", emoji: "🔥" },
+  { text: "You do not rise to the level of your goals. You fall to the level of your systems.", author: "— James Clear", emoji: "⚡" },
+  { text: "The secret of getting ahead is getting started.", author: "— Mark Twain", emoji: "🚀" },
+  { text: "Small daily improvements over time lead to stunning results.", author: "— Robin Sharma", emoji: "💫" },
+  { text: "Every action you take is a vote for the person you wish to become.", author: "— James Clear", emoji: "🗳️" },
+];
+
+const HABIT_COLORS = ['#00F5C4','#C9B8FF','#FFB347','#5BC4FF','#FF6B8A','#84FF8A','#FFD700','#FF9F7F','#87CEEB','#DDA0DD'];
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem('trackhab_v2') || 'null') || { habits: [], log: {} }; }
+  catch { return { habits: [], log: {} }; }
+}
+function saveData(d) { localStorage.setItem('trackhab_v2', JSON.stringify(d)); }
+
+let data = loadData();
+let selectedEmoji = '🏃';
+let pendingDelete = null;
+
+// ─── Helpers ──────────────────────────────────────────────────────────
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function dateKey(d) { return d.toISOString().slice(0,10); }
+
+function isCompletedToday(habitId) {
+  return !!(data.log[todayKey()] && data.log[todayKey()][habitId]);
+}
+
+function getStreak(habitId) {
+  let streak = 0, d = new Date();
+  // Check if completed today first
+  const td = dateKey(d);
+  if (data.log[td] && data.log[td][habitId]) { streak = 1; }
+  else {
+    d.setDate(d.getDate()-1);
+  }
+  // Walk back
+  while(true) {
+    d.setDate(d.getDate()-1);
+    const k = dateKey(d);
+    if(data.log[k] && data.log[k][habitId]) { streak++; }
+    else break;
+    if(streak > 365) break;
+  }
+  return streak;
+}
+
+function getCompletionRate(habitId) {
+  let total = 0, done = 0;
+  for(let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = dateKey(d);
+    total++;
+    if(data.log[k] && data.log[k][habitId]) done++;
+  }
+  return total ? Math.round((done/total)*100) : 0;
+}
+
+// ─── Page Nav ─────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-'+name);
+  if(pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const t = n.textContent.trim().toLowerCase();
+    if(
+      (name==='dashboard' && t.includes('dashboard')) ||
+      (name==='add' && t.includes('add')) ||
+      (name==='manage' && t.includes('manage')) ||
+      (name==='stats' && t.includes('stat')) ||
+      (name==='podcasts' && t.includes('podcast')) ||
+      (name==='archive' && t.includes('past'))
+    ) n.classList.add('active');
+  });
+  if(name==='dashboard') renderDashboard();
+  if(name==='add') renderAddPage();
+  if(name==='manage') renderManage();
+  if(name==='stats') renderStats();
+  if(name==='podcasts') renderPodcasts();
+  if(name==='archive') renderArchive();
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────
+function renderDashboard() {
+  // Greeting
+  const h = new Date().getHours();
+  const g = h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
+  document.getElementById('greeting-time').textContent = g;
+
+  // Quote (rotates daily)
+  const qi = new Date().getDate() % QUOTES.length;
+  const q = QUOTES[qi];
+  document.getElementById('quoteText').textContent = q.text;
+  document.getElementById('quoteAuthor').textContent = q.author;
+  document.getElementById('quoteEmoji').textContent = q.emoji;
+
+  // Stats
+  const total = data.habits.length;
+  const done = data.habits.filter(h => isCompletedToday(h.id)).length;
+  document.getElementById('statToday').textContent = `${done}/${total}`;
+
+  // Best streak
+  let best = 0, bestName = '—';
+  data.habits.forEach(h => {
+    const s = getStreak(h.id);
+    if(s > best){ best = s; bestName = h.emoji+' '+h.name; }
+  });
+  document.getElementById('statStreak').textContent = best > 0 ? `${best} 🔥` : '0';
+  document.getElementById('statStreakName').textContent = bestName;
+
+  // Overall rate
+  let totalPossible = 0, totalDone = 0;
+  data.habits.forEach(h => {
+    for(let i=6;i>=0;i--){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const k = dateKey(d);
+      totalPossible++;
+      if(data.log[k] && data.log[k][h.id]) totalDone++;
+    }
+  });
+  const rate = totalPossible ? Math.round((totalDone/totalPossible)*100) : 0;
+  document.getElementById('statRate').textContent = rate + '%';
+
+  // Habits grid
+  const grid = document.getElementById('habitsGrid');
+  grid.innerHTML = '';
+  if(!data.habits.length) {
+    grid.innerHTML = `<div class="habits-empty"><div class="empty-icon">🌱</div><p>No habits yet. <button onclick="showPage('add')" style="background:none;border:none;color:var(--mint);cursor:pointer;font-size:0.9rem;font-weight:600">Add your first habit →</button></p></div>`;
+    return;
+  }
+  data.habits.forEach(h => {
+    const done = isCompletedToday(h.id);
+    const streak = getStreak(h.id);
+    const card = document.createElement('div');
+    card.className = 'habit-card' + (done ? ' done' : '');
+    card.onclick = () => toggleHabit(h.id);
+    card.innerHTML = `
+      <div class="habit-emoji">${h.emoji}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak"><span class="fire">🔥</span> ${streak} day streak</div>
+      </div>
+      <div class="habit-check">${done ? '✓' : ''}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function toggleHabit(id) {
+  const k = todayKey();
+  if(!data.log[k]) data.log[k] = {};
+  const wasDone = data.log[k][id];
+  data.log[k][id] = !wasDone;
+  saveData(data);
+  renderDashboard();
+  if(!wasDone) {
+    showToast('Habit completed! 🎉');
+    spawnConfetti();
+  }
+}
+
+// ─── Add Page ─────────────────────────────────────────────────────────
+function renderAddPage() {
+  const atLimit = data.habits.length >= 10;
+  document.getElementById('limitNotice').style.display = atLimit ? 'flex' : 'none';
+  document.getElementById('addHabitBtn').disabled = atLimit;
+  document.getElementById('habitName').value = '';
+  selectedEmoji = '🏃';
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const btn = document.createElement('div');
+    btn.className = 'emoji-option' + (e === selectedEmoji ? ' selected' : '');
+    btn.textContent = e;
+    btn.onclick = () => {
+      selectedEmoji = e;
+      document.querySelectorAll('.emoji-option').forEach(x => x.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function addHabit() {
+  const name = document.getElementById('habitName').value.trim();
+  if(!name) { showToast('Please enter a habit name.'); return; }
+  if(data.habits.length >= 10) { showToast('10-habit limit reached!'); return; }
+  const id = 'h_' + Date.now();
+  data.habits.push({ id, name, emoji: selectedEmoji, createdAt: todayKey() });
+  saveData(data);
+  showToast(`"${name}" added! 🌱`);
+  showPage('dashboard');
+}
+
+// ─── Manage ───────────────────────────────────────────────────────────
+function renderManage() {
+  const list = document.getElementById('manageList');
+  list.innerHTML = '';
+  if(!data.habits.length) {
+    list.innerHTML = `<div class="habits-empty"><div class="empty-icon">📋</div><p>No habits to manage.</p></div>`;
+    return;
+  }
+  data.habits.forEach(h => {
+    const streak = getStreak(h.id);
+    const item = document.createElement('div');
+    item.className = 'manage-item';
+    item.innerHTML = `
+      <div class="habit-emoji">${h.emoji}</div>
+      <div style="flex:1">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak">🔥 ${streak} day streak</div>
+      </div>
+      <button class="btn btn-sm btn-edit" onclick="openEditModal('${h.id}')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="confirmDelete('${h.id}','${h.name.replace(/'/g,"\\'")}')">Delete</button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function confirmDelete(id, name) {
+  pendingDelete = id;
+  document.getElementById('modalSub').textContent = `Delete "${name}"? This will remove all its tracking data.`;
+  document.getElementById('modalConfirmBtn').onclick = () => doDelete(id);
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function doDelete(id) {
+  data.habits = data.habits.filter(h => h.id !== id);
+  Object.values(data.log).forEach(day => delete day[id]);
+  saveData(data);
+  closeModal();
+  renderManage();
+  showToast('Habit deleted.');
+}
+function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+
+// ─── Edit Habit ────────────────────────────────────────────────────────
+let editingId = null;
+let editSelectedEmoji = '';
+
+function openEditModal(id) {
+  const habit = data.habits.find(h => h.id === id);
+  if(!habit) return;
+  editingId = id;
+  editSelectedEmoji = habit.emoji;
+  document.getElementById('editHabitName').value = habit.name;
+
+  const grid = document.getElementById('editEmojiGrid');
+  grid.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const btn = document.createElement('div');
+    btn.className = 'emoji-option' + (e === editSelectedEmoji ? ' selected' : '');
+    btn.textContent = e;
+    btn.onclick = () => {
+      editSelectedEmoji = e;
+      grid.querySelectorAll('.emoji-option').forEach(x => x.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('editModalOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('editHabitName').focus(), 50);
+}
+
+function saveEditHabit() {
+  const name = document.getElementById('editHabitName').value.trim();
+  if(!name) { showToast('Please enter a habit name.'); return; }
+  const habit = data.habits.find(h => h.id === editingId);
+  if(!habit) return;
+  habit.name = name;
+  habit.emoji = editSelectedEmoji;
+  saveData(data);
+  closeEditModal();
+  renderManage();
+  showToast('Habit updated! ✏️');
+}
+
+function closeEditModal() {
+  document.getElementById('editModalOverlay').style.display = 'none';
+  editingId = null;
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────
+function renderStats() {
+  renderWheel();
+  renderBarChart();
+  renderStreakGrid();
+  renderHeatmap();
+}
+
+function renderWheel() {
+  const svg = document.getElementById('habitWheel');
+  svg.innerHTML = '';
+  const W = 480, H = 260;
+  const cx = W/2, cy = H/2 + 10;
+  const outerR = 100, innerR = 48;
+  const habits = data.habits;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const centerColor = isDark ? '#EDF0F7' : '#111827';
+  const mutedColor = isDark ? '#7A8FAF' : '#6B7A99';
+  const arcBgColor = isDark ? '#1E2D45' : '#DDE3EE';
+
+  if(!habits.length) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', W/2); t.setAttribute('y', H/2);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('fill', mutedColor);
+    t.setAttribute('font-family','Plus Jakarta Sans,sans-serif'); t.setAttribute('font-size','14');
+    t.textContent = 'Add habits to see your wheel';
+    svg.appendChild(t);
+    return;
+  }
+
+  const gap = 0.04;  const total = habits.length;
+  const sliceAngle = (2 * Math.PI / total) - gap;
+
+  habits.forEach((h, i) => {
+    const rate = getCompletionRate(h.id) / 100;
+    const startAngle = i * (2*Math.PI/total) - Math.PI/2;
+    const endAngle = startAngle + sliceAngle;
+    const color = HABIT_COLORS[i % HABIT_COLORS.length];
+
+    // Background arc
+    const bgPath = arcPath(cx, cy, outerR, innerR, startAngle, endAngle);
+    const bgEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+    bgEl.setAttribute('d', bgPath); bgEl.setAttribute('fill', arcBgColor);
+    svg.appendChild(bgEl);
+
+    // Fill arc
+    if(rate > 0) {
+      const fillEnd = startAngle + sliceAngle * rate;
+      const fPath = arcPath(cx, cy, outerR, innerR, startAngle, fillEnd);
+      const fEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+      fEl.setAttribute('d', fPath); fEl.setAttribute('fill', color); fEl.setAttribute('opacity','0.9');
+      svg.appendChild(fEl);
+    }
+
+    // Emoji label
+    const labelAngle = startAngle + sliceAngle/2;
+    const labelR = outerR + 22;
+    const lx = cx + labelR * Math.cos(labelAngle);
+    const ly = cy + labelR * Math.sin(labelAngle);
+    const et = document.createElementNS('http://www.w3.org/2000/svg','text');
+    et.setAttribute('x', lx); et.setAttribute('y', ly);
+    et.setAttribute('text-anchor','middle'); et.setAttribute('dominant-baseline','middle');
+    et.setAttribute('font-size','15'); et.textContent = h.emoji;
+    svg.appendChild(et);
+  });
+
+  // Center text
+  const centerPct = habits.length ? Math.round(habits.reduce((s,h)=>s+getCompletionRate(h.id),0)/habits.length) : 0;
+  const ct = document.createElementNS('http://www.w3.org/2000/svg','text');
+  ct.setAttribute('x',cx); ct.setAttribute('y',cy-8);
+  ct.setAttribute('text-anchor','middle'); ct.setAttribute('fill', centerColor);
+  ct.setAttribute('font-family','DM Serif Display,serif'); ct.setAttribute('font-size','24');
+  ct.textContent = centerPct + '%';
+  svg.appendChild(ct);
+
+  const cl = document.createElementNS('http://www.w3.org/2000/svg','text');
+  cl.setAttribute('x',cx); cl.setAttribute('y',cy+14);
+  cl.setAttribute('text-anchor','middle'); cl.setAttribute('fill', mutedColor);
+  cl.setAttribute('font-family','Plus Jakarta Sans,sans-serif'); cl.setAttribute('font-size','10');
+  cl.textContent = 'avg 7-day rate';
+  svg.appendChild(cl);
+}
+
+function arcPath(cx, cy, outerR, innerR, startA, endA) {
+  const x1 = cx + outerR*Math.cos(startA), y1 = cy + outerR*Math.sin(startA);
+  const x2 = cx + outerR*Math.cos(endA),   y2 = cy + outerR*Math.sin(endA);
+  const x3 = cx + innerR*Math.cos(endA),   y3 = cy + innerR*Math.sin(endA);
+  const x4 = cx + innerR*Math.cos(startA), y4 = cy + innerR*Math.sin(startA);
+  const lg = (endA - startA) > Math.PI ? 1 : 0;
+  return `M${x1},${y1} A${outerR},${outerR},0,${lg},1,${x2},${y2} L${x3},${y3} A${innerR},${innerR},0,${lg},0,${x4},${y4} Z`;
+}
+
+function renderBarChart() {
+  const container = document.getElementById('barChart');
+  container.innerHTML = '';
+  if(!data.habits.length) { container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:20px">No habits yet.</div>'; return; }
+  data.habits.forEach((h, i) => {
+    const rate = getCompletionRate(h.id);
+    const color = HABIT_COLORS[i % HABIT_COLORS.length];
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-label"><span>${h.emoji}</span><span style="overflow:hidden;text-overflow:ellipsis">${h.name}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${rate}%;background:${color}"></div></div>
+      <div class="bar-pct">${rate}%</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function renderStreakGrid() {
+  const grid = document.getElementById('streakGrid');
+  grid.innerHTML = '';
+  if(!data.habits.length) { grid.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;grid-column:1/-1;text-align:center;padding:20px">No habits yet.</div>'; return; }
+  data.habits.forEach(h => {
+    const streak = getStreak(h.id);
+    const card = document.createElement('div');
+    card.className = 'streak-card';
+    card.innerHTML = `<div class="emoji">${h.emoji}</div><div class="name">${h.name}</div><div class="streak-num">${streak}</div><div class="streak-unit">day streak</div>`;
+    grid.appendChild(card);
+  });
+}
+
+function renderHeatmap() {
+  const container = document.getElementById('heatmap');
+  container.innerHTML = '';
+  const totalDays = 84; // 12 weeks
+  for(let i = totalDays-1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = dateKey(d);
+    const dayLog = data.log[k] || {};
+    const completed = Object.values(dayLog).filter(Boolean).length;
+    const total = data.habits.length || 1;
+    const ratio = completed / total;
+    let cls = 'heat-0';
+    if(ratio > 0.75) cls = 'heat-4';
+    else if(ratio > 0.5) cls = 'heat-3';
+    else if(ratio > 0.25) cls = 'heat-2';
+    else if(ratio > 0) cls = 'heat-1';
+    const cell = document.createElement('div');
+    cell.className = `heatmap-cell ${cls}`;
+    cell.title = `${k}: ${completed}/${total} completed`;
+    container.appendChild(cell);
+  }
+}
+
+// ─── Toast & Confetti ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function spawnConfetti() {
+  const colors = ['#00F5C4','#FFB347','#C9B8FF','#FF6B8A','#5BC4FF'];
+  for(let i=0;i<18;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.cssText = `left:${20+Math.random()*60}vw;top:${Math.random()*30}vh;background:${colors[i%colors.length]};animation-delay:${Math.random()*0.4}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>0.5?'50%':'2px'}`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1800);
+  }
+}
+
+// ─── End Streak ───────────────────────────────────────────────────────
+const END_STREAK_QUOTES = [
+  { text: "Every champion was once a contender who refused to give up.", author: "Rocky Balboa" },
+  { text: "It's not whether you get knocked down, it's whether you get up.", author: "Vince Lombardi" },
+  { text: "The secret of getting ahead is getting started — again.", author: "Mark Twain" },
+  { text: "Fall seven times, stand up eight.", author: "Japanese Proverb" },
+  { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "A river cuts through rock not because of its power, but its persistence.", author: "James N. Watkins" },
+];
+
+function openEndStreakModal() {
+  if(!data.habits.length) { showToast('No active habits to end.'); return; }
+  // Pick a quote
+  const q = END_STREAK_QUOTES[Math.floor(Math.random() * END_STREAK_QUOTES.length)];
+  document.getElementById('endStreakQuote').innerHTML = `"${q.text}"<br><span style="font-size:0.78rem;font-style:normal;font-family:var(--font-body);color:var(--mint);font-weight:600;margin-top:6px;display:block">— ${q.author}</span>`;
+
+  // Build summary
+  let totalDays = 0, totalCompleted = 0;
+  let summaryHTML = '';
+  data.habits.forEach(h => {
+    const streak = getStreak(h.id);
+    const rate = getCompletionRate(h.id);
+    // count all log entries for this habit
+    let hDone = 0;
+    Object.values(data.log).forEach(day => { if(day[h.id]) hDone++; });
+    totalCompleted += hDone;
+    summaryHTML += `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span>${h.emoji} ${h.name}</span><span style="color:var(--amber);font-weight:700">🔥${streak} days &nbsp; ${rate}%</span></div>`;
+  });
+  const firstDate = Object.keys(data.log).sort()[0] || todayKey();
+  document.getElementById('endStreakSummary').innerHTML = `
+    <div style="font-weight:700;color:var(--text);margin-bottom:8px">📋 Streak Summary</div>
+    ${summaryHTML}
+    <div style="margin-top:8px;font-size:0.8rem">Started: <strong>${firstDate}</strong> &nbsp;·&nbsp; Habits: <strong>${data.habits.length}</strong> &nbsp;·&nbsp; Total completions: <strong>${totalCompleted}</strong></div>
+  `;
+
+  document.getElementById('endStreakOverlay').style.display = 'flex';
+}
+
+function closeEndStreakModal() {
+  document.getElementById('endStreakOverlay').style.display = 'none';
+}
+
+function confirmEndStreak() {
+  // Build archive record
+  const firstDate = Object.keys(data.log).sort()[0] || todayKey();
+  const archiveRecord = {
+    id: 'arc_' + Date.now(),
+    startDate: firstDate,
+    endDate: todayKey(),
+    habits: data.habits.map(h => ({
+      id: h.id, name: h.name, emoji: h.emoji,
+      streak: getStreak(h.id),
+      rate: getCompletionRate(h.id),
+      totalDone: Object.values(data.log).filter(day => day[h.id]).length,
+    })),
+    totalCompletions: 0,
+  };
+  archiveRecord.totalCompletions = archiveRecord.habits.reduce((s,h) => s + h.totalDone, 0);
+
+  // Load and update archive
+  let archive = [];
+  try { archive = JSON.parse(localStorage.getItem('trackhab_archive') || '[]'); } catch {}
+  archive.unshift(archiveRecord);
+  localStorage.setItem('trackhab_archive', JSON.stringify(archive));
+
+  // Reset current data
+  data = { habits: [], log: {} };
+  saveData(data);
+  closeEndStreakModal();
+  showToast('Streak ended & archived. Fresh start! 🌱');
+  spawnConfetti();
+  showPage('archive');
+}
+
+// ─── Archive (Past Streaks) ────────────────────────────────────────────
+function renderArchive() {
+  const container = document.getElementById('archiveList');
+  container.innerHTML = '';
+  let archive = [];
+  try { archive = JSON.parse(localStorage.getItem('trackhab_archive') || '[]'); } catch {}
+
+  if(!archive.length) {
+    container.innerHTML = `<div class="archive-empty"><div class="empty-icon">🏆</div><p>No past streaks yet.<br>Complete a streak journey and it will be preserved here.</p></div>`;
+    return;
+  }
+
+  archive.forEach((rec, idx) => {
+    const card = document.createElement('div');
+    card.className = 'archive-streak-card';
+    const totalHabits = rec.habits.length;
+    const avgRate = totalHabits ? Math.round(rec.habits.reduce((s,h)=>s+h.rate,0)/totalHabits) : 0;
+    const bestStreak = rec.habits.reduce((b,h)=>Math.max(b,h.streak),0);
+
+    let habitsHTML = rec.habits.map(h => `
+      <div class="archive-habit-row">
+        <div class="archive-habit-emoji">${h.emoji}</div>
+        <div class="archive-habit-name">${h.name}</div>
+        <div class="archive-habit-stats">
+          <span class="archive-stat-chip chip-streak">🔥 ${h.streak} days</span>
+          <span class="archive-stat-chip chip-rate">${h.rate}%</span>
+        </div>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="archive-streak-header">
+        <div class="archive-streak-title">Streak Journey #${archive.length - idx}</div>
+        <div class="archive-streak-dates">${rec.startDate} → ${rec.endDate}</div>
+      </div>
+      ${habitsHTML}
+      <div class="archive-overall">
+        <div class="archive-overall-item"><strong>${totalHabits}</strong>Habits Tracked</div>
+        <div class="archive-overall-item"><strong>${bestStreak}🔥</strong>Best Streak</div>
+        <div class="archive-overall-item"><strong>${avgRate}%</strong>Avg Completion</div>
+        <div class="archive-overall-item"><strong>${rec.totalCompletions}</strong>Total Check-ins</div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ─── Podcasts ─────────────────────────────────────────────────────────
+const PODCASTS = [
+  {
+    id: 'sVF8HKBlgws',
+    speaker: 'Andrew Huberman',
+    title: 'The Science of Making & Breaking Habits',
+    desc: 'Neuroscientist Dr. Huberman breaks down the neuroscience of habit formation, dopamine scheduling, and how to make habits stick permanently.',
+    tag: 'Neuroscience',
+  },
+  {
+    id: 'YLBDkz0B4jI',
+    speaker: 'Michael Phelps',
+    title: 'Daily Habits of the Most Decorated Olympian',
+    desc: 'The 23-time gold medallist shares his ruthless morning routines, mental visualisation habits, and the daily disciplines behind extraordinary results.',
+    tag: 'Elite Performance',
+  },
+  {
+    id: 'v-3qKMtBHx4',
+    speaker: 'James Clear',
+    title: 'Atomic Habits — Tiny Changes, Remarkable Results',
+    desc: 'The author of Atomic Habits explains the 4-step habit loop, identity-based habits, and how 1% improvements compound into massive success.',
+    tag: 'Habit Science',
+  },
+  {
+    id: 'Wcs2PFz5q6g',
+    speaker: 'Virat Kohli',
+    title: 'Fitness & Mental Discipline Masterclass',
+    desc: 'Cricket legend Virat Kohli talks about the habits of elite athletes — from diet and sleep to mental toughness and building a champion mindset.',
+    tag: 'Athletic Mindset',
+  },
+  {
+    id: 'gLmElhTIBaE',
+    speaker: 'Robin Sharma',
+    title: 'The 5 AM Club: Own Your Morning, Elevate Your Life',
+    desc: 'Leadership expert Robin Sharma reveals his legendary morning routine framework and why the first hour of your day determines everything else.',
+    tag: 'Morning Rituals',
+  },
+  {
+    id: '0MNQRkWNahE',
+    speaker: 'David Goggins',
+    title: 'Build Unstoppable Habits Through Discomfort',
+    desc: 'Navy SEAL and ultramarathon runner David Goggins on callousing your mind, embracing discomfort, and forging habits through relentless accountability.',
+    tag: 'Mental Toughness',
+  },
+];
+
+let ytPlayerOpen = false;
+
+function renderPodcasts() {
+  const grid = document.getElementById('podcastsGrid');
+  grid.innerHTML = '';
+  PODCASTS.forEach(p => {
+    const thumb = `https://img.youtube.com/vi/${p.id}/hqdefault.jpg`;
+    const card = document.createElement('div');
+    card.className = 'podcast-card';
+    card.innerHTML = `
+      <div class="podcast-thumb" onclick="openYoutube('${p.id}','${p.title.replace(/'/g,"\\'")}')">
+        <img src="${thumb}" alt="${p.title}" loading="lazy" onerror="this.style.display='none'">
+        <div class="play-btn"><div class="play-btn-circle">▶</div></div>
+      </div>
+      <div class="podcast-meta">
+        <div class="podcast-speaker">${p.speaker} · ${p.tag}</div>
+        <div class="podcast-title">${p.title}</div>
+        <div class="podcast-desc">${p.desc}</div>
+        <a class="podcast-watch-btn" href="https://www.youtube.com/watch?v=${p.id}" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+          Watch on YouTube
+        </a>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function openYoutube(videoId, title) {
+  if(document.getElementById('ytOverlay')) document.getElementById('ytOverlay').remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'yt-overlay';
+  overlay.id = 'ytOverlay';
+  overlay.innerHTML = `
+    <div class="yt-overlay-inner">
+      <button class="yt-close" onclick="closeYoutube()">✕</button>
+      <iframe class="yt-iframe" src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      <div class="yt-title">${title}</div>
+    </div>
+  `;
+  overlay.onclick = (e) => { if(e.target === overlay) closeYoutube(); };
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeYoutube() {
+  const o = document.getElementById('ytOverlay');
+  if(o) o.remove();
+  document.body.style.overflow = '';
+}
+
+// Close YouTube player on Escape key
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeYoutube(); });
+
+// ─── Theme ────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  applyTheme(next);
+  localStorage.setItem('trackhab_theme', next);
+}
+
+function applyTheme(theme) {
+  if(theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('themeLabel').textContent = '☾ Dark';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('themeLabel').textContent = '☀ Light';
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────
+function init() {
+  // Restore saved theme
+  const savedTheme = localStorage.getItem('trackhab_theme') || 'light';
+  applyTheme(savedTheme);
+
+  // Date display
+  const now = new Date();
+  const opts = { weekday:'short', month:'short', day:'numeric' };
+  document.getElementById('sidebarDate').textContent = now.toLocaleDateString('en-US', opts);
+  renderDashboard();
+}
+
+init();
+</script>
+</body>
+</html>
