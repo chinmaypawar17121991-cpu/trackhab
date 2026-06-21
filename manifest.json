@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/0D9E7E/ffffff?text=TH",
+      "src": "TrackHabTick.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
