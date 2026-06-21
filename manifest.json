@@ -2,7 +2,7 @@
   "name": "TrackHab",
   "short_name": "TrackHab",
   "description": "Build daily habits and track your streaks",
-  "start_url": "/trackhab/",
+  "start_url": "/trackhab/trackhab_final.html",
   "display": "standalone",
   "background_color": "#F5F7FA",
   "theme_color": "#0D9E7E",
