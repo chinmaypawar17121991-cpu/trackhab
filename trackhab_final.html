@@ -1,12 +1,103 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TrackHab">
+<meta name="theme-color" content="#0D9E7E">
+<meta name="description" content="Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.">
 <title>TrackHab — Build Daily Habits</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-<link rel="manifest" src="manifest.json">
+
+<script>
+(function() {
+  // ── 1. Inject Web App Manifest dynamically (works regardless of file path/host) ──
+  const pageUrl = location.href.split('?')[0];
+  const manifest = {
+    name: "TrackHab — Build Daily Habits",
+    short_name: "TrackHab",
+    description: "Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.",
+    start_url: pageUrl,
+    scope: "./",
+    display: "standalone",
+    orientation: "portrait-primary",
+    background_color: "#F5F7FA",
+    theme_color: "#0D9E7E",
+    lang: "en-US",
+    categories: ["health", "fitness", "lifestyle", "productivity"],
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%230D9E7E'/%3E%3Cpolygon points='256,80 290,180 400,180 315,240 345,340 256,280 167,340 197,240 112,180 222,180' fill='white'/%3E%3Ctext x='256' y='430' text-anchor='middle' font-size='90' font-weight='bold' fill='white' font-family='serif'%3ETH%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" },
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='43' fill='%230D9E7E'/%3E%3Cpolygon points='96,30 107,67 150,67 118,90 129,127 96,105 63,127 74,90 42,67 85,67' fill='white'/%3E%3Ctext x='96' y='162' text-anchor='middle' font-size='34' font-weight='bold' fill='white' font-family='serif'%3ETH%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" }
+    ],
+    shortcuts: [
+      { name: "Dashboard", short_name: "Home", description: "Today's habits", url: pageUrl + "#dashboard" },
+      { name: "Add Habit",  short_name: "Add",  description: "Create a habit",  url: pageUrl + "#add" },
+      { name: "Statistics", short_name: "Stats", description: "View your stats", url: pageUrl + "#stats" }
+    ],
+    prefer_related_applications: false,
+    display_override: ["standalone", "minimal-ui", "browser"]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  const manifestUrl = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = manifestUrl;
+  document.currentScript.parentNode.insertBefore(link, document.currentScript.nextSibling);
+
+  // Apple touch icon (inline SVG as data URI)
+  const appleIcon = document.createElement('link');
+  appleIcon.rel = 'apple-touch-icon';
+  appleIcon.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='43' fill='%230D9E7E'/%3E%3Cpolygon points='96,30 107,67 150,67 118,90 129,127 96,105 63,127 74,90 42,67 85,67' fill='white'/%3E%3Ctext x='96' y='162' text-anchor='middle' font-size='34' font-weight='bold' fill='white' font-family='serif'%3ETH%3C/text%3E%3C/svg%3E";
+  document.currentScript.parentNode.appendChild(appleIcon);
+
+  // ── 2. Register inline Service Worker via Blob URL ──────────────────
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+const CACHE = 'trackhab-v3';
+const START_URL = '${pageUrl}';
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.add(START_URL)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      const fresh = fetch(e.request).then(res => {
+        if (res && res.status === 200 && res.type !== 'opaque') {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || fresh;
+    })
+  );
+});
+    `.trim();
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl  = URL.createObjectURL(swBlob);
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(swUrl, { scope: './' })
+        .then(r => console.log('[TrackHab] SW registered ✓', r.scope))
+        .catch(e => console.warn('[TrackHab] SW error:', e));
+    });
+  }
+})();
+</script>
 <style>
   /* ── Light Theme (default) ── */
   :root {
@@ -64,53 +155,129 @@
     --sidebar-shadow: 2px 0 16px rgba(0,0,0,0.3);
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; -webkit-font-smoothing: antialiased; }
 
   /* ── Layout ── */
   .app { display: flex; min-height: 100vh; }
+
   .sidebar {
     width: 240px; min-height: 100vh; background: var(--bg2);
-    border-right: 1px solid var(--border); padding: 28px 20px;
+    border-right: 1px solid var(--border); padding: 0;
     display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100;
-    box-shadow: var(--sidebar-shadow); transition: background 0.3s, border-color 0.3s;
+    box-shadow: var(--sidebar-shadow);
+    transition: width 0.3s cubic-bezier(.4,0,.2,1), background 0.3s, border-color 0.3s;
+    overflow: hidden;
   }
-  .main { margin-left: 240px; flex: 1; padding: 36px 40px; min-height: 100vh; }
+  .sidebar.collapsed { width: 64px; }
 
-  /* ── Brand ── */
-  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
-  .brand-icon { width: 36px; height: 36px; background: var(--mint); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-  .brand-name { font-family: var(--font-display); font-size: 1.35rem; letter-spacing: -0.01em; color: var(--text); }
+  .main {
+    margin-left: 240px; flex: 1; padding: 36px 40px; min-height: 100vh;
+    transition: margin-left 0.3s cubic-bezier(.4,0,.2,1);
+  }
+  .sidebar.collapsed ~ .main { margin-left: 64px; }
+
+  /* ── Sidebar Top Bar (hamburger + brand) ── */
+  .sidebar-topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 14px 14px; min-height: 70px; flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Hamburger button */
+  .hamburger {
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; transition: background 0.2s, border-color 0.2s; padding: 0;
+  }
+  .hamburger:hover { background: var(--mint-dim); border-color: var(--mint); }
+  .hamburger span {
+    display: block; width: 16px; height: 2px; background: var(--text-muted);
+    border-radius: 2px; transition: all 0.3s cubic-bezier(.4,0,.2,1); transform-origin: center;
+  }
+  .hamburger:hover span { background: var(--mint); }
+  /* Animate to X when open (we'll use a class on body) */
+  body.sidebar-open .hamburger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  body.sidebar-open .hamburger span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  body.sidebar-open .hamburger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Brand — hides text when collapsed */
+  .brand { display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1; }
+  .brand-icon { width: 36px; height: 36px; background: var(--mint); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .brand-name {
+    font-family: var(--font-display); font-size: 1.35rem; letter-spacing: -0.01em; color: var(--text);
+    white-space: nowrap; overflow: hidden;
+    transition: opacity 0.2s, transform 0.3s;
+    opacity: 1; transform: translateX(0);
+  }
   .brand-name span { color: var(--mint); }
+  .sidebar.collapsed .brand-name { opacity: 0; transform: translateX(-12px); pointer-events: none; }
+
+  /* ── Sidebar scroll area ── */
+  .sidebar-body {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 16px 10px; overflow-y: auto; overflow-x: hidden;
+  }
 
   /* ── Nav ── */
-  .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .nav { display: flex; flex-direction: column; gap: 3px; flex: 1; }
   .nav-item {
-    display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+    display: flex; align-items: center; gap: 12px; padding: 11px 10px;
     border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
     color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
     border: none; background: none; text-align: left; width: 100%; font-family: var(--font-body);
+    white-space: nowrap; position: relative;
   }
   .nav-item:hover { background: var(--mint-dim2); color: var(--text); }
   .nav-item.active { background: var(--mint-dim); color: var(--mint); }
-  .nav-item .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+  .nav-icon { font-size: 1.15rem; width: 24px; text-align: center; flex-shrink: 0; }
+  .nav-label {
+    transition: opacity 0.2s, transform 0.25s;
+    opacity: 1; transform: translateX(0);
+  }
+  .sidebar.collapsed .nav-label { opacity: 0; transform: translateX(-8px); pointer-events: none; }
 
-  .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
-  .date-pill { background: var(--bg3); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: var(--text-muted); }
+  /* Tooltip on collapsed */
+  .nav-item[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute; left: 56px; top: 50%; transform: translateY(-50%);
+    background: var(--text); color: var(--bg2); font-size: 0.78rem; font-weight: 700;
+    padding: 5px 10px; border-radius: 7px; white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity 0.15s; z-index: 200;
+  }
+  .sidebar.collapsed .nav-item[data-tip]:hover::after { opacity: 1; }
+
+  /* ── Sidebar Footer ── */
+  .sidebar-footer {
+    margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .date-pill {
+    background: var(--bg3); border-radius: 8px; padding: 10px 10px;
+    font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden;
+    transition: opacity 0.2s;
+  }
   .date-pill strong { display: block; font-family: var(--font-body); font-weight: 700; color: var(--text); font-size: 0.95rem; margin-top: 2px; }
+  .sidebar.collapsed .date-pill { opacity: 0; pointer-events: none; }
 
   /* ── Theme Toggle ── */
   .theme-toggle {
     display: flex; align-items: center; justify-content: space-between;
-    background: var(--bg3); border-radius: 8px; padding: 9px 13px;
-    margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border);
-    transition: all 0.2s;
+    background: var(--bg3); border-radius: 8px; padding: 9px 10px;
+    cursor: pointer; border: 1px solid var(--border);
+    transition: all 0.2s; overflow: hidden; white-space: nowrap;
   }
   .theme-toggle:hover { border-color: var(--mint); }
-  .theme-toggle-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+  .theme-toggle-label {
+    font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+    transition: opacity 0.2s; flex: 1;
+  }
+  .sidebar.collapsed .theme-toggle-label { opacity: 0; width: 0; }
   .theme-toggle-pill {
     width: 36px; height: 20px; background: var(--bg2); border-radius: 10px;
-    border: 1.5px solid var(--border); position: relative; transition: background 0.3s;
+    border: 1.5px solid var(--border); position: relative; transition: background 0.3s; flex-shrink: 0;
   }
   [data-theme="dark"] .theme-toggle-pill { background: var(--mint); border-color: var(--mint); }
   .theme-toggle-knob {
@@ -300,12 +467,225 @@
 
   /* ── Responsive ── */
   @media (max-width: 900px) {
-    .sidebar { width: 200px; }
-    .main { margin-left: 200px; padding: 24px 20px; }
+    .sidebar { width: 240px; }
+    .sidebar.collapsed { width: 64px; }
+    .main { margin-left: 240px; padding: 24px 20px; }
+    .sidebar.collapsed ~ .main { margin-left: 64px; }
     .stats-layout { grid-template-columns: 1fr; }
-    .progress-row { grid-template-columns: repeat(2, 1fr); }
-    .habits-grid { grid-template-columns: 1fr; }
+    .progress-row { grid-template-columns: repeat(3, 1fr); }
+    .habits-grid { grid-template-columns: repeat(2, 1fr); }
+    .podcasts-grid { grid-template-columns: 1fr; }
   }
+
+  /* ─────────────────────────────────────────────
+     MOBILE — full redesign for ≤ 600px / APK
+  ───────────────────────────────────────────── */
+  @media (max-width: 600px) {
+
+    /* Hide desktop sidebar completely */
+    .sidebar { display: none !important; }
+    .mobile-overlay { display: none !important; }
+
+    /* Full-width main, no margin, bottom padding for tab bar */
+    .main {
+      margin-left: 0 !important;
+      padding: 0 0 80px 0;
+      min-height: 100vh;
+    }
+
+    /* ── Mobile Top Bar ── */
+    .mobile-topbar {
+      display: flex !important;
+      align-items: center; justify-content: space-between;
+      padding: 14px 18px; background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
+    .mobile-topbar-brand { display: flex; align-items: center; gap: 8px; }
+    .mobile-topbar-brand .brand-icon { width: 32px; height: 32px; font-size: 15px; }
+    .mobile-topbar-brand .brand-name { font-family: var(--font-display); font-size: 1.15rem; color: var(--text); }
+    .mobile-topbar-brand .brand-name span { color: var(--mint); }
+    .mobile-topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .mobile-theme-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--bg3); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; cursor: pointer;
+    }
+
+    /* Page content padding */
+    .page { padding: 18px 16px; }
+
+    /* ── Page Header ── */
+    .page-header { margin-bottom: 20px; }
+    .page-title { font-size: 1.6rem; }
+    .page-sub { font-size: 0.82rem; }
+
+    /* ── Quote Banner ── */
+    .quote-banner {
+      flex-direction: column; gap: 14px; padding: 18px 16px;
+      margin-bottom: 20px; text-align: center;
+      border-radius: 14px;
+    }
+    .quote-img { width: 64px; height: 64px; font-size: 2rem; align-self: center; }
+    .quote-text { font-size: 0.95rem; line-height: 1.55; }
+    .quote-author { font-size: 0.8rem; }
+    .quote-accent, .quote-accent2 { display: none; }
+
+    /* ── Stats Row ── */
+    .progress-row {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px; margin-bottom: 20px;
+    }
+    .stat-card { padding: 14px 10px; border-radius: 12px; }
+    .stat-label { font-size: 0.62rem; letter-spacing: 0.06em; }
+    .stat-value { font-size: 1.4rem; }
+    .stat-sub { font-size: 0.65rem; }
+
+    /* ── Habits Grid ── */
+    .section-title { font-size: 0.68rem; margin-bottom: 12px; }
+    .habits-grid { grid-template-columns: 1fr; gap: 10px; }
+    .habit-card { padding: 14px 16px; gap: 12px; border-radius: 14px; }
+    .habit-emoji { width: 42px; height: 42px; font-size: 1.4rem; border-radius: 10px; }
+    .habit-name { font-size: 0.92rem; }
+    .habit-streak { font-size: 0.72rem; }
+    .habit-check { width: 26px; height: 26px; border-radius: 7px; }
+
+    /* ── Section title spacing ── */
+    .section-title { margin-top: 4px; }
+
+    /* ── Buttons ── */
+    .btn { padding: 13px 20px; font-size: 0.9rem; border-radius: 12px; }
+    .btn-mint { width: 100%; text-align: center; }
+
+    /* ── Add Habit Form ── */
+    .add-habit-form { max-width: 100%; }
+    .form-section { padding: 18px 16px; border-radius: 14px; margin-bottom: 14px; }
+    .form-section-title { font-size: 1rem; margin-bottom: 14px; }
+    label { font-size: 0.75rem; }
+    input[type="text"] { padding: 13px 14px; font-size: 1rem; border-radius: 10px; }
+    .emoji-grid { grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .emoji-option { width: 100%; height: 44px; font-size: 1.4rem; border-radius: 10px; }
+    .habit-limit-notice { font-size: 0.82rem; padding: 11px 14px; }
+
+    /* ── Manage List ── */
+    .manage-list { max-width: 100%; gap: 10px; }
+    .manage-item { padding: 14px 14px; border-radius: 14px; gap: 10px; flex-wrap: wrap; }
+    .manage-item .habit-emoji { font-size: 1.3rem; }
+    .manage-item .habit-name { font-size: 0.9rem; }
+    .manage-item .habit-streak { font-size: 0.75rem; }
+    .btn-sm { padding: 8px 12px; font-size: 0.8rem; }
+
+    /* ── Stats Page ── */
+    .stats-layout { grid-template-columns: 1fr; gap: 14px; }
+    .chart-card { padding: 16px; border-radius: 14px; }
+    .chart-title { font-size: 0.88rem; margin-bottom: 14px; }
+    #habitWheel { width: 100%; max-width: 340px; }
+    .bar-label { width: 90px; font-size: 0.75rem; }
+    .bar-track { height: 8px; }
+    .bar-pct { font-size: 0.75rem; }
+    .heatmap-cell { width: 11px; height: 11px; }
+    .streak-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .streak-card { padding: 12px; border-radius: 12px; }
+    .streak-card .streak-num { font-size: 1.5rem; }
+
+    /* ── Podcasts ── */
+    .podcasts-grid { grid-template-columns: 1fr; gap: 16px; }
+    .podcast-card { border-radius: 14px; }
+    .podcast-meta { padding: 14px 14px 16px; }
+    .podcast-title { font-size: 0.95rem; }
+    .podcast-desc { font-size: 0.78rem; }
+    /* Always show play button on mobile (no hover) */
+    .podcast-thumb .play-btn { opacity: 1; background: rgba(0,0,0,0.28); }
+
+    /* ── Archive ── */
+    .archive-streak-card { padding: 16px 14px; border-radius: 14px; }
+    .archive-streak-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .archive-streak-title { font-size: 1.1rem; }
+    .archive-habit-row { padding: 9px 12px; gap: 10px; }
+    .archive-habit-stats { gap: 8px; }
+    .archive-stat-chip { font-size: 0.7rem; padding: 3px 8px; }
+    .archive-overall { flex-wrap: wrap; gap: 14px; }
+    .archive-overall-item strong { font-size: 1.2rem; }
+
+    /* ── Modals ── */
+    .modal-overlay { align-items: flex-end; }
+    .modal {
+      width: 100% !important; max-width: 100% !important;
+      border-radius: 20px 20px 0 0 !important;
+      padding: 24px 20px 32px !important;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 1.2rem; }
+    .modal-actions { flex-direction: column-reverse; gap: 10px; }
+    .modal-actions .btn { width: 100%; text-align: center; padding: 14px; }
+    .end-streak-modal { max-width: 100%; }
+    .end-streak-quote { font-size: 0.95rem; padding: 14px; }
+    .end-streak-summary { font-size: 0.82rem; max-height: 180px; overflow-y: auto; }
+
+    /* ── Edit Modal emoji grid ── */
+    #editEmojiGrid { grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    #editEmojiGrid .emoji-option { height: 44px; }
+
+    /* ── Toast ── */
+    .toast {
+      bottom: 90px; right: 16px; left: 16px;
+      text-align: center; border-radius: 12px;
+      font-size: 0.9rem;
+    }
+
+    /* ── Bottom Nav Tab Bar ── */
+    .mobile-nav {
+      display: flex !important;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--bg2); border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+      padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+      height: auto;
+    }
+    .mobile-nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 3px; padding: 6px 4px;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-family: var(--font-body);
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em; transition: color 0.15s; -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-nav-item .mn-icon { font-size: 1.35rem; line-height: 1; transition: transform 0.15s; }
+    .mobile-nav-item.active { color: var(--mint); }
+    .mobile-nav-item.active .mn-icon { transform: scale(1.15); }
+    .mobile-nav-item.danger { color: var(--coral); }
+
+    /* ── More drawer ── */
+    .mobile-more-drawer {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: var(--bg2); border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 12px 20px 40px;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.15);
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    .mobile-more-drawer.open { display: block; transform: translateY(0); }
+    .drawer-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+    .drawer-title { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 14px; color: var(--text); }
+    .drawer-item {
+      display: flex; align-items: center; gap: 14px; padding: 13px 0;
+      border-bottom: 1px solid var(--border); color: var(--text-muted);
+      font-size: 0.92rem; font-weight: 600; cursor: pointer; background: none; border: none;
+      width: 100%; font-family: var(--font-body); text-align: left;
+    }
+    .drawer-item:last-child { border-bottom: none; }
+    .drawer-item .di-icon { font-size: 1.2rem; width: 28px; text-align: center; }
+    .drawer-item.danger { color: var(--coral); }
+    .drawer-overlay { display: none; position: fixed; inset: 0; z-index: 150; background: rgba(0,0,0,0.4); }
+    .drawer-overlay.open { display: block; }
+  }
+
+  /* Hide mobile-only elements on desktop */
+  .mobile-topbar { display: none; }
+  .mobile-nav { display: none; }
+  .mobile-more-drawer { display: none; }
+  .drawer-overlay { display: none; }
 
   /* ── Podcasts ── */
   .podcasts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 22px; }
@@ -399,49 +779,75 @@
 </style>
 </head>
 <body>
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar()"></div>
+
 <div class="app">
   <!-- Sidebar -->
-  <nav class="sidebar">
-    <div class="brand">
-      <div class="brand-icon">✦</div>
-      <div class="brand-name">Track<span>Hab</span></div>
+  <nav class="sidebar" id="sidebar">
+
+    <!-- Top bar: hamburger + brand -->
+    <div class="sidebar-topbar">
+      <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="brand">
+        <div class="brand-icon">✦</div>
+        <div class="brand-name">Track<span>Hab</span></div>
+      </div>
     </div>
-    <div class="nav">
-      <button class="nav-item active" onclick="showPage('dashboard')">
-        <span class="nav-icon">🏠</span> Dashboard
-      </button>
-      <button class="nav-item" onclick="showPage('add')">
-        <span class="nav-icon">＋</span> Add Habit
-      </button>
-      <button class="nav-item" onclick="showPage('manage')">
-        <span class="nav-icon">⚙</span> Manage
-      </button>
-      <button class="nav-item" onclick="showPage('stats')">
-        <span class="nav-icon">📊</span> Statistics
-      </button>
-      <button class="nav-item" onclick="showPage('podcasts')">
-        <span class="nav-icon">🎙</span> Podcasts
-      </button>
-      <button class="nav-item" onclick="showPage('archive')">
-        <span class="nav-icon">🏆</span> Past Streaks
-      </button>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <button class="nav-item" style="color:var(--coral)" onclick="openEndStreakModal()">
-          <span class="nav-icon">🔚</span> End Streak
+
+    <!-- Scrollable body -->
+    <div class="sidebar-body">
+      <div class="nav">
+        <button class="nav-item active" data-tip="Dashboard" onclick="showPage('dashboard')">
+          <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
         </button>
+        <button class="nav-item" data-tip="Add Habit" onclick="showPage('add')">
+          <span class="nav-icon">＋</span><span class="nav-label">Add Habit</span>
+        </button>
+        <button class="nav-item" data-tip="Manage" onclick="showPage('manage')">
+          <span class="nav-icon">⚙</span><span class="nav-label">Manage</span>
+        </button>
+        <button class="nav-item" data-tip="Statistics" onclick="showPage('stats')">
+          <span class="nav-icon">📊</span><span class="nav-label">Statistics</span>
+        </button>
+        <button class="nav-item" data-tip="Podcasts" onclick="showPage('podcasts')">
+          <span class="nav-icon">🎙</span><span class="nav-label">Podcasts</span>
+        </button>
+        <button class="nav-item" data-tip="Past Streaks" onclick="showPage('archive')">
+          <span class="nav-icon">🏆</span><span class="nav-label">Past Streaks</span>
+        </button>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <button class="nav-item" data-tip="End Streak" style="color:var(--coral)" onclick="openEndStreakModal()">
+            <span class="nav-icon">🔚</span><span class="nav-label">End Streak</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+          <span class="theme-toggle-label" id="themeLabel">☀ Light</span>
+          <div class="theme-toggle-pill"><div class="theme-toggle-knob"></div></div>
+        </div>
+        <div class="date-pill">Today<strong id="sidebarDate">—</strong></div>
       </div>
     </div>
-    <div class="sidebar-footer">
-      <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
-        <span class="theme-toggle-label" id="themeLabel">☀ Light</span>
-        <div class="theme-toggle-pill"><div class="theme-toggle-knob"></div></div>
-      </div>
-      <div class="date-pill">Today<strong id="sidebarDate">—</strong></div>
-    </div>
+
   </nav>
 
   <!-- Main -->
   <main class="main">
+
+    <!-- ── Mobile Top Bar (only visible on mobile) ── -->
+    <div class="mobile-topbar" id="mobileTopbar">
+      <div class="mobile-topbar-brand">
+        <div class="brand-icon">✦</div>
+        <div class="brand-name">Track<span>Hab</span></div>
+      </div>
+      <div class="mobile-topbar-actions">
+        <div class="mobile-theme-btn" onclick="toggleTheme()" title="Toggle theme" id="mobileThemeBtn">☀</div>
+      </div>
+    </div>
 
     <!-- ── Dashboard ── -->
     <div id="page-dashboard" class="page active">
@@ -582,6 +988,44 @@
     </div>
 
   </main>
+</div>
+
+<!-- ── Mobile Bottom Nav (only visible on mobile) ── -->
+<nav class="mobile-nav" id="mobileNav">
+  <button class="mobile-nav-item active" id="mn-dashboard" onclick="mobileNav('dashboard')">
+    <span class="mn-icon">🏠</span>Home
+  </button>
+  <button class="mobile-nav-item" id="mn-add" onclick="mobileNav('add')">
+    <span class="mn-icon">＋</span>Add
+  </button>
+  <button class="mobile-nav-item" id="mn-stats" onclick="mobileNav('stats')">
+    <span class="mn-icon">📊</span>Stats
+  </button>
+  <button class="mobile-nav-item" id="mn-podcasts" onclick="mobileNav('podcasts')">
+    <span class="mn-icon">🎙</span>Podcasts
+  </button>
+  <button class="mobile-nav-item" id="mn-more" onclick="openMobileDrawer()">
+    <span class="mn-icon">☰</span>More
+  </button>
+</nav>
+
+<!-- ── Mobile More Drawer ── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeMobileDrawer()"></div>
+<div class="mobile-more-drawer" id="mobileDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">More Options</div>
+  <button class="drawer-item" onclick="mobileNavDrawer('manage')">
+    <span class="di-icon">⚙</span> Manage Habits
+  </button>
+  <button class="drawer-item" onclick="mobileNavDrawer('archive')">
+    <span class="di-icon">🏆</span> Past Streaks
+  </button>
+  <div class="drawer-item" onclick="toggleTheme();closeMobileDrawer()">
+    <span class="di-icon" id="drawerThemeIcon">☀</span> <span id="drawerThemeLabel">Switch to Dark</span>
+  </div>
+  <button class="drawer-item danger" onclick="closeMobileDrawer();openEndStreakModal()">
+    <span class="di-icon">🔚</span> End Streak
+  </button>
 </div>
 
 <!-- Delete Modal -->
@@ -1309,6 +1753,53 @@ function closeYoutube() {
 // Close YouTube player on Escape key
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeYoutube(); });
 
+// ─── Sidebar Toggle ───────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobileOverlay');
+  const isMobile = window.innerWidth <= 600;
+
+  if (isMobile) {
+    const isOpen = sidebar.classList.contains('mobile-open');
+    sidebar.classList.toggle('mobile-open', !isOpen);
+    overlay.classList.toggle('show', !isOpen);
+    document.body.classList.toggle('sidebar-open', !isOpen);
+  } else {
+    const isCollapsed = sidebar.classList.contains('collapsed');
+    sidebar.classList.toggle('collapsed', !isCollapsed);
+    document.body.classList.toggle('sidebar-open', isCollapsed);
+    localStorage.setItem('trackhab_sidebar', isCollapsed ? 'expanded' : 'collapsed');
+  }
+}
+
+// ─── Mobile Navigation ────────────────────────────────────────────────
+function mobileNav(page) {
+  closeMobileDrawer();
+  showPage(page);
+  // Update bottom tab active state
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('mn-' + page);
+  if (btn) btn.classList.add('active');
+}
+
+function mobileNavDrawer(page) {
+  closeMobileDrawer();
+  showPage(page);
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+}
+
+function openMobileDrawer() {
+  document.getElementById('mobileDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileDrawer() {
+  document.getElementById('mobileDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 // ─── Theme ────────────────────────────────────────────────────────────
 function toggleTheme() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1321,9 +1812,21 @@ function applyTheme(theme) {
   if(theme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.getElementById('themeLabel').textContent = '☾ Dark';
+    const mb = document.getElementById('mobileThemeBtn');
+    if(mb) mb.textContent = '☾';
+    const di = document.getElementById('drawerThemeIcon');
+    if(di) di.textContent = '☾';
+    const dl = document.getElementById('drawerThemeLabel');
+    if(dl) dl.textContent = 'Switch to Light';
   } else {
     document.documentElement.removeAttribute('data-theme');
     document.getElementById('themeLabel').textContent = '☀ Light';
+    const mb = document.getElementById('mobileThemeBtn');
+    if(mb) mb.textContent = '☀';
+    const di = document.getElementById('drawerThemeIcon');
+    if(di) di.textContent = '☀';
+    const dl = document.getElementById('drawerThemeLabel');
+    if(dl) dl.textContent = 'Switch to Dark';
   }
 }
 
@@ -1332,6 +1835,15 @@ function init() {
   // Restore saved theme
   const savedTheme = localStorage.getItem('trackhab_theme') || 'light';
   applyTheme(savedTheme);
+
+  // Restore sidebar state
+  const savedSidebar = localStorage.getItem('trackhab_sidebar') || 'expanded';
+  if (savedSidebar === 'collapsed' && window.innerWidth > 600) {
+    document.getElementById('sidebar').classList.add('collapsed');
+    document.body.classList.remove('sidebar-open');
+  } else {
+    document.body.classList.add('sidebar-open');
+  }
 
   // Date display
   const now = new Date();
