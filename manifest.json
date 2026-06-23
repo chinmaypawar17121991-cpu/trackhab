@@ -1,118 +1,24 @@
 {
-  "name": "TrackHab — Build Daily Habits",
+  "name": "TrackHab",
   "short_name": "TrackHab",
-  "description": "Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.",
-  "start_url": "/trackhab_final.html",
-  "scope": "./",
+  "description": "Build daily habits and track your streaks",
+  "start_url": "https://chinmaypawar17121991-cpu.github.io/trackhab/trackhab_final.html",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#F5F7FA",
   "theme_color": "#0D9E7E",
-  "lang": "en-US",
-  "dir": "ltr",
-  "categories": ["health", "fitness", "lifestyle", "productivity"],
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "icons/icon-48.png",
-      "sizes": "48x48",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-192.png",
+      "src": "TrackHabTick192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon-256.png",
-      "sizes": "256x256",
-      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "TrackHabTick192.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
-  ],
-  "screenshots": [
-    {
-      "src": "screenshots/dashboard.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Dashboard — today's habits and progress"
-    },
-    {
-      "src": "screenshots/stats.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Statistics — streaks, completion wheel and heatmap"
-    },
-    {
-      "src": "screenshots/podcasts.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Podcasts — habit building talks from top performers"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Dashboard",
-      "short_name": "Home",
-      "description": "Go to today's habit dashboard",
-      "url": "trackhab_final.html#dashboard",
-      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Add Habit",
-      "short_name": "Add",
-      "description": "Create a new habit",
-      "url": "trackhab_final.html#add",
-      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Statistics",
-      "short_name": "Stats",
-      "description": "View your habit statistics and streaks",
-      "url": "trackhab_final.html#stats",
-      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
-    }
-  ],
-  "prefer_related_applications": false,
-  "display_override": ["standalone", "minimal-ui", "browser"]
+  ]
 }
