@@ -2,7 +2,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="/manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -10,8 +9,96 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="TrackHab">
 <meta name="theme-color" content="#0D9E7E">
+<meta name="description" content="Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.">
 <title>TrackHab — Build Daily Habits</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+<script>
+(function() {
+  // ── 1. Inject Web App Manifest dynamically (works regardless of file path/host) ──
+  const pageUrl = location.href.split('?')[0];
+  const manifest = {
+    name: "TrackHab — Build Daily Habits",
+    short_name: "TrackHab",
+    description: "Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.",
+    start_url: pageUrl,
+    scope: "./",
+    display: "standalone",
+    orientation: "portrait-primary",
+    background_color: "#F5F7FA",
+    theme_color: "#0D9E7E",
+    lang: "en-US",
+    categories: ["health", "fitness", "lifestyle", "productivity"],
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%230D9E7E'/%3E%3Cpolygon points='256,80 290,180 400,180 315,240 345,340 256,280 167,340 197,240 112,180 222,180' fill='white'/%3E%3Ctext x='256' y='430' text-anchor='middle' font-size='90' font-weight='bold' fill='white' font-family='serif'%3ETH%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" },
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='43' fill='%230D9E7E'/%3E%3Cpolygon points='96,30 107,67 150,67 118,90 129,127 96,105 63,127 74,90 42,67 85,67' fill='white'/%3E%3Ctext x='96' y='162' text-anchor='middle' font-size='34' font-weight='bold' fill='white' font-family='serif'%3ETH%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" }
+    ],
+    shortcuts: [
+      { name: "Dashboard", short_name: "Home", description: "Today's habits", url: pageUrl + "#dashboard" },
+      { name: "Add Habit",  short_name: "Add",  description: "Create a habit",  url: pageUrl + "#add" },
+      { name: "Statistics", short_name: "Stats", description: "View your stats", url: pageUrl + "#stats" }
+    ],
+    prefer_related_applications: false,
+    display_override: ["standalone", "minimal-ui", "browser"]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  const manifestUrl = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = manifestUrl;
+  document.currentScript.parentNode.insertBefore(link, document.currentScript.nextSibling);
+
+  // Apple touch icon (inline SVG as data URI)
+  const appleIcon = document.createElement('link');
+  appleIcon.rel = 'apple-touch-icon';
+  appleIcon.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='43' fill='%230D9E7E'/%3E%3Cpolygon points='96,30 107,67 150,67 118,90 129,127 96,105 63,127 74,90 42,67 85,67' fill='white'/%3E%3Ctext x='96' y='162' text-anchor='middle' font-size='34' font-weight='bold' fill='white' font-family='serif'%3ETH%3C/text%3E%3C/svg%3E";
+  document.currentScript.parentNode.appendChild(appleIcon);
+
+  // ── 2. Register inline Service Worker via Blob URL ──────────────────
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+const CACHE = 'trackhab-v3';
+const START_URL = '${pageUrl}';
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.add(START_URL)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      const fresh = fetch(e.request).then(res => {
+        if (res && res.status === 200 && res.type !== 'opaque') {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || fresh;
+    })
+  );
+});
+    `.trim();
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl  = URL.createObjectURL(swBlob);
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register(swUrl, { scope: './' })
+        .then(r => console.log('[TrackHab] SW registered ✓', r.scope))
+        .catch(e => console.warn('[TrackHab] SW error:', e));
+    });
+  }
+})();
+</script>
 <style>
   /* ── Light Theme (default) ── */
   :root {
