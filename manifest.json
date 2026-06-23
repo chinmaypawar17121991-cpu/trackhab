@@ -2,7 +2,7 @@
   "name": "TrackHab — Build Daily Habits",
   "short_name": "TrackHab",
   "description": "Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.",
-  "start_url": "https://chinmaypawar17121991-cpu.github.io/trackhab/trackhab_final.html",
+  "start_url": "/trackhab_final.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
