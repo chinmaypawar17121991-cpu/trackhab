@@ -2,7 +2,7 @@
   "name": "TrackHab — Build Daily Habits",
   "short_name": "TrackHab",
   "description": "Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.",
-  "start_url": "/index.html",
+  "start_url": "/trackhab_final.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -98,21 +98,21 @@
       "name": "Dashboard",
       "short_name": "Home",
       "description": "Go to today's habit dashboard",
-      "url": "/index.html#dashboard",
+      "url": "/trackhab_final.html#dashboard",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Add Habit",
       "short_name": "Add",
       "description": "Create a new habit",
-      "url": "/index.html#add",
+      "url": "/trackhab_final.html#add",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Statistics",
       "short_name": "Stats",
       "description": "View your habit statistics and streaks",
-      "url": "/index.html#stats",
+      "url": "/trackhab_final.html#stats",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],
@@ -123,7 +123,7 @@
   "iarc_rating_id": "",
 
   "share_target": {
-    "action": "/index.html",
+    "action": "/trackhab_final.html",
     "method": "GET",
     "params": {
       "title": "title",
