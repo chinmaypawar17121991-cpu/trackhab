@@ -2,8 +2,8 @@
   "name": "TrackHab — Build Daily Habits",
   "short_name": "TrackHab",
   "description": "Build powerful daily habits, track streaks, view stats, and stay inspired with habit-building podcasts from world-class performers.",
-  "start_url": "/trackhab_final.html",
-  "scope": "/",
+  "start_url": "trackhab_final.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#F5F7FA",
@@ -11,7 +11,6 @@
   "lang": "en-US",
   "dir": "ltr",
   "categories": ["health", "fitness", "lifestyle", "productivity"],
-
   "icons": [
     {
       "src": "icons/icon-48.png",
@@ -68,7 +67,6 @@
       "purpose": "any maskable"
     }
   ],
-
   "screenshots": [
     {
       "src": "screenshots/dashboard.png",
@@ -92,47 +90,29 @@
       "label": "Podcasts — habit building talks from top performers"
     }
   ],
-
   "shortcuts": [
     {
       "name": "Dashboard",
       "short_name": "Home",
       "description": "Go to today's habit dashboard",
-      "url": "/trackhab_final.html#dashboard",
+      "url": "trackhab_final.html#dashboard",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Add Habit",
       "short_name": "Add",
       "description": "Create a new habit",
-      "url": "/trackhab_final.html#add",
+      "url": "trackhab_final.html#add",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Statistics",
       "short_name": "Stats",
       "description": "View your habit statistics and streaks",
-      "url": "/trackhab_final.html#stats",
+      "url": "trackhab_final.html#stats",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ],
-
   "prefer_related_applications": false,
-  "related_applications": [],
-
-  "iarc_rating_id": "",
-
-  "share_target": {
-    "action": "/trackhab_final.html",
-    "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  },
-
-  "protocol_handlers": [],
-
   "display_override": ["standalone", "minimal-ui", "browser"]
 }
